@@ -15,9 +15,16 @@ public final class ToolBox {
 	public static final ToolBox SELF = new ToolBox();
 
 	public static URL getURL(String path) throws FileNotFoundException {
-		URL url = SELF.getClass().getResource(RES_DIR+path);
-		if (url==null)
-			throw new FileNotFoundException(RES_DIR+path);
+		// ClassLoader.getSystemResource() procura caminhos *exatamente*
+		// como eles estão na pasta 'resources'.
+		// Ex: "jinvaders.png" ou "sounds/Walk1.wav"
+		// Este método é o mais fiável para builds Maven.
+		URL url = ClassLoader.getSystemResource(path);
+
+		if (url == null) {
+			// Se falhar, o ficheiro não está a ser copiado para o classpath.
+			throw new FileNotFoundException("Recurso não encontrado no Classpath: " + path);
+		}
 		return url;
 	}
 

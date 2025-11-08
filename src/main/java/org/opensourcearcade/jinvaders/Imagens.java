@@ -9,13 +9,14 @@ import java.io.IOException;
 
 public class Imagens {
     private BufferedImage plyrImg, e1Img, e2Img, e3Img, ufoImg, llBnkImg, lrBnkImg, ulBnkImg, urBnkImg, mmBnkImg, sndOffImg, backbuffer;
+    private BufferedImage backgroundImg;
 
     public Imagens() {
     }
 
     public void setImagens() {
         try {
-            plyrImg = ToolBox.loadImage(ToolBox.getURL("player.png"));
+            plyrImg = ToolBox.loadImage(ToolBox.getURL("player1.png"));
             e1Img = ToolBox.loadImage(ToolBox.getURL("e1.png"));
             e2Img = ToolBox.loadImage(ToolBox.getURL("e2.png"));
             e3Img = ToolBox.loadImage(ToolBox.getURL("e3.png"));
@@ -26,6 +27,7 @@ public class Imagens {
             mmBnkImg = ToolBox.loadImage(ToolBox.getURL("mm.png"));
             ufoImg = ToolBox.loadImage(ToolBox.getURL("ufo.png"));
             sndOffImg = ToolBox.loadImage(ToolBox.getURL("sndOff.png"));
+            backgroundImg = ToolBox.loadImage(ToolBox.getURL("background.jpg"));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -82,6 +84,8 @@ public class Imagens {
     public BufferedImage getBackbuffer() {
         return backbuffer;
     }
+
+    public BufferedImage getBackgroundImg() { return backgroundImg; }
 
     // --- BUNKERS ---
     public void resetBunkers(Imagens imagens) {

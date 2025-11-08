@@ -503,8 +503,9 @@ public final class Game extends Applet implements Runnable {
         if (frameCtr > 300)
             frameCtr = 0;
 
-        g2d.setColor(Cores.getCorFundoJogo());
-        g2d.clearRect(0, 0, WIDTH, HEIGHT);
+       // g2d.setColor(Cores.getCorFundoJogo());
+       // g2d.clearRect(0, 0, WIDTH, HEIGHT);
+        g2d.drawImage(imagens.getBackgroundImg(), 0, 0, WIDTH, HEIGHT, null);
 
         g2d.setColor(Cores.getCorBranca());
         g2d.setFont(font.deriveFont(20f));
