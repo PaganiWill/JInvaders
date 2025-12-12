@@ -48,6 +48,8 @@ public final class Game extends Applet implements Runnable {
     public static final int FRAMES_PER_IMAGE = 3;
 
     private GameStates gameState = GameStates.SPLASH_SCREEN;
+    private DifficultyLevel selectedDifficulty = DifficultyLevel.MEDIUM;
+    private int difficultySelectionIndex = 1; // Difficulty selection index (0=EASY, 1=MEDIUM, 2=HARD, 3=SUPREME)
 
     private static final NumberFormat NUM_FORMAT = new DecimalFormat("000000");
 
@@ -129,11 +131,6 @@ public final class Game extends Applet implements Runnable {
         boolean isApplet = (null != System.getSecurityManager());
         highScores = isApplet ? new AppletHighScores() : new ApplicationHighScores();
 
-        imagens.setBackbuffer(ToolBox.convertToCompatibleImage(new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB)));
-        g2d = imagens.getBackbuffer().createGraphics();
-        Color cordeFundo = new Color(28, 28, 28);
-        g2d.setBackground(cordeFundo);
-
         playerName1 = "PLAYER1";
         playerName2 = "PLAYER2";
         tmpPlayerName = playerName1;
@@ -143,6 +140,25 @@ public final class Game extends Applet implements Runnable {
             imagens.setImagens();
             Sound.init();
             font = ToolBox.loadFont(ToolBox.getURL("ARCADEPI.TTF"));
+            
+            BufferedImage bgImg = imagens.getBackgroundImg();
+            BufferedImage backbuffer = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
+            Graphics2D bgG2d = backbuffer.createGraphics();
+            if (bgImg != null) {
+                bgG2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                bgG2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                bgG2d.drawImage(bgImg, 0, 0, WIDTH, HEIGHT, null);
+            } else {
+                bgG2d.setColor(Cores.getCorFundoJogo());
+                bgG2d.fillRect(0, 0, WIDTH, HEIGHT);
+            }
+            bgG2d.dispose();
+            
+            imagens.setBackbuffer(ToolBox.convertToCompatibleImage(backbuffer));
+            g2d = imagens.getBackbuffer().createGraphics();
+            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         } catch (Exception e) {
             System.err.println(e.getLocalizedMessage());
             System.exit(1);
@@ -168,6 +184,9 @@ public final class Game extends Applet implements Runnable {
                 break;
             case HIGH_SCORE_SCREEN:
                 updateHighScoreScreen(time);
+                break;
+            case DIFFICULTY_SELECTION_SCREEN:
+                updateDifficultySelectionScreen(time);
                 break;
             case IN_GAME_SCREEN:
                 updateInGameScreen(time);
@@ -204,8 +223,7 @@ public final class Game extends Applet implements Runnable {
     public void updateScreenUtil(GameStates gs, long time) {
         if (keyboard.isEnterKey()) {
             keyboard.setEnterKey(false);
-            resetGame();
-            gameState = GameStates.IN_GAME_SCREEN;
+            gameState = GameStates.DIFFICULTY_SELECTION_SCREEN;
             return;
         }
         splashScreenTimer -= time;
@@ -229,6 +247,32 @@ public final class Game extends Applet implements Runnable {
         if (!keyboard.isEnterKey()) {
             Object[] scores = highScores.getHighScores();
             highscore = (scores.length > 0) ? Integer.parseInt((String) scores[1]) : 0;
+        }
+    }
+
+    private void updateDifficultySelectionScreen(long time) {
+        // Navegação com setas para cima/baixo
+        if (keyboard.isUpKey()) {
+            keyboard.setUpKey(false);
+            difficultySelectionIndex--;
+            if (difficultySelectionIndex < 0) {
+                difficultySelectionIndex = DifficultyLevel.values().length - 1;
+            }
+            selectedDifficulty = DifficultyLevel.values()[difficultySelectionIndex];
+        } else if (keyboard.isDownKey()) {
+            keyboard.setDownKey(false);
+            difficultySelectionIndex++;
+            if (difficultySelectionIndex >= DifficultyLevel.values().length) {
+                difficultySelectionIndex = 0;
+            }
+            selectedDifficulty = DifficultyLevel.values()[difficultySelectionIndex];
+        }
+
+        // Enter para confirmar e iniciar o jogo
+        if (keyboard.isEnterKey()) {
+            keyboard.setEnterKey(false);
+            resetGame();
+            gameState = GameStates.IN_GAME_SCREEN;
         }
     }
 
@@ -503,9 +547,16 @@ public final class Game extends Applet implements Runnable {
         if (frameCtr > 300)
             frameCtr = 0;
 
-       // g2d.setColor(Cores.getCorFundoJogo());
-       // g2d.clearRect(0, 0, WIDTH, HEIGHT);
-        g2d.drawImage(imagens.getBackgroundImg(), 0, 0, WIDTH, HEIGHT, null);
+        BufferedImage bgImg = imagens.getBackgroundImg();
+        if (bgImg != null) {
+            g2d.setComposite(AlphaComposite.Src);
+            g2d.drawImage(bgImg, 0, 0, WIDTH, HEIGHT, null);
+        } else {
+            g2d.setComposite(AlphaComposite.Src);
+            g2d.setColor(Cores.getCorFundoJogo());
+            g2d.fillRect(0, 0, WIDTH, HEIGHT);
+        }
+        g2d.setComposite(AlphaComposite.SrcOver);
 
         g2d.setColor(Cores.getCorBranca());
         g2d.setFont(font.deriveFont(20f));
@@ -533,6 +584,9 @@ public final class Game extends Applet implements Runnable {
                 break;
             case HIGH_SCORE_SCREEN:
                 drawHighScoreScreen(g2d, fontHeight);
+                break;
+            case DIFFICULTY_SELECTION_SCREEN:
+                drawDifficultySelectionScreen(g2d, fontHeight);
                 break;
             case IN_GAME_SCREEN:
                 drawIngameScreen(g2d);
@@ -650,6 +704,32 @@ public final class Game extends Applet implements Runnable {
         Help.inputName(WIDTH, HEIGHT, charWidth, strLen, fontHeight, tmpPlayerName, g, caretPos);
     }
 
+    private void drawDifficultySelectionScreen(Graphics g, int fontHeight) {
+        ToolBox.drawText(g, "SELECT DIFFICULTY", fontHeight * 5, Cores.getCorBranca());
+
+        DifficultyLevel[] difficulties = DifficultyLevel.values();
+        int startY = fontHeight * 8;
+        int spacing = fontHeight * 2;
+
+        for (int i = 0; i < difficulties.length; i++) {
+            DifficultyLevel diff = difficulties[i];
+            String text = diff.getDisplayName() + " (" + diff.getLives() + " " + (diff.getLives() == 1 ? "LIFE" : "LIVES") + ")";
+            
+            Color color;
+            if (i == difficultySelectionIndex) {
+                color = Cores.getCorVermelha();
+                // Draw arrow indicating selection
+                ToolBox.drawText(g, "> " + text + " <", WIDTH / 2, startY + i * spacing, color);
+            } else {
+                color = Cores.getCorBranca();
+                ToolBox.drawText(g, text, WIDTH / 2, startY + i * spacing, color);
+            }
+        }
+
+        ToolBox.drawText(g, "USE ARROWS TO NAVIGATE", fontHeight * 18, Cores.getCorVerde());
+        ToolBox.drawText(g, "ENTER TO CONFIRM", fontHeight * 20, Cores.getCorVerde());
+    }
+
     private void drawPressEnter(Graphics g, int fontHeight) {
         if (frameCtr < 250) {
             if (panel.hasFocus())
@@ -686,7 +766,7 @@ public final class Game extends Applet implements Runnable {
         highscore = highScores.getHighScore();
         splashScreenTimer = 4000000000L;
         soundCtr = 0;
-        lives1 = /* lives2 = */LIVES;
+        lives1 = selectedDifficulty.getLives();
         ufoCntDown = 15000 + (2000 - (int) (Math.random() * 4000));
         shot_freq = Speeds.getAlienShotFreq();
 
@@ -702,9 +782,10 @@ public final class Game extends Applet implements Runnable {
 
         if (player == null) {
             player = new Player();
-            player.setImage(imagens.getPlyrImg(), 3);
             player.y = Pos.PLAYER_Y_POS;
         }
+        // Selecionar imagem aleatória do player a cada novo jogo
+        player.setImage(imagens.getRandomPlayerImg(), 3);
         player.reset(imagens);
 
         // --- Aliens ---

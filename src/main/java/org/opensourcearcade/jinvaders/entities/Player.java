@@ -49,7 +49,8 @@ public class Player extends Entity {
         this.cntDown = 0;
         this.frame = 0;
         this.visible = true;
-        this.x = Game.WIDTH / 2 - imagens.getPlyrImg().getWidth() / 2;
+        // Usar a largura da imagem atual do player (já definida em setImage)
+        this.x = Game.WIDTH / 2 - this.w / 2;
         // --- player shot ---
         if (this.getPlayerShot() == null) {
             this.setPlayerShot(new Entity());

@@ -8,15 +8,30 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 public class Imagens {
-    private BufferedImage plyrImg, e1Img, e2Img, e3Img, ufoImg, llBnkImg, lrBnkImg, ulBnkImg, urBnkImg, mmBnkImg, sndOffImg, backbuffer;
-    private BufferedImage backgroundImg;
+    private BufferedImage plyrImg1, plyrImg2, plyrImg3, plyrImg4, e1Img, e2Img, e3Img, ufoImg, llBnkImg, lrBnkImg, ulBnkImg, urBnkImg, mmBnkImg, sndOffImg, backgroundImg, backbuffer;
 
     public Imagens() {
     }
 
     public void setImagens() {
         try {
-            plyrImg = ToolBox.loadImage(ToolBox.getURL("player1.png"));
+            plyrImg1 = ToolBox.loadImage(ToolBox.getURL("player1.png"));
+            plyrImg2 = ToolBox.loadImage(ToolBox.getURL("player2.png"));
+            plyrImg3 = ToolBox.loadImage(ToolBox.getURL("player3.png"));
+            plyrImg4 = ToolBox.loadImage(ToolBox.getURL("player4.png"));
+            
+            try {
+                java.net.URL bgUrl = null;
+                try {
+                    bgUrl = ToolBox.getURL("background.png");
+                } catch (java.io.FileNotFoundException e) {
+                    bgUrl = ToolBox.getURL("background.jpg");
+                }
+                backgroundImg = ToolBox.loadImage(bgUrl);
+            } catch (Exception e) {
+                backgroundImg = null;
+            }
+            
             e1Img = ToolBox.loadImage(ToolBox.getURL("e1.png"));
             e2Img = ToolBox.loadImage(ToolBox.getURL("e2.png"));
             e3Img = ToolBox.loadImage(ToolBox.getURL("e3.png"));
@@ -27,14 +42,29 @@ public class Imagens {
             mmBnkImg = ToolBox.loadImage(ToolBox.getURL("mm.png"));
             ufoImg = ToolBox.loadImage(ToolBox.getURL("ufo.png"));
             sndOffImg = ToolBox.loadImage(ToolBox.getURL("sndOff.png"));
-            backgroundImg = ToolBox.loadImage(ToolBox.getURL("background.jpg"));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public BufferedImage getPlyrImg() {
-        return plyrImg;
+    public BufferedImage getBackgroundImg() {
+        return backgroundImg;
+    }
+
+    public BufferedImage getRandomPlayerImg() {
+        int random = (int) (Math.random() * 4);
+        switch (random) {
+            case 0:
+                return plyrImg1;
+            case 1:
+                return plyrImg2;
+            case 2:
+                return plyrImg3;
+            case 3:
+                return plyrImg4;
+            default:
+                return plyrImg1;
+        }
     }
 
     public BufferedImage getE1Img() {
@@ -84,8 +114,6 @@ public class Imagens {
     public BufferedImage getBackbuffer() {
         return backbuffer;
     }
-
-    public BufferedImage getBackgroundImg() { return backgroundImg; }
 
     // --- BUNKERS ---
     public void resetBunkers(Imagens imagens) {

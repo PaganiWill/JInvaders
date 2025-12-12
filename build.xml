@@ -6,13 +6,11 @@
     <property name="classes.dir" value="${build.dir}/classes"/>
     <property name="jar.dir" value="${build.dir}/jar"/>
     <property name="main-class" value="${ant.project.name}"/>
-    <property name="lib.dir" value="../libs"/>
+    <property name="lib.dir" value="src/main/resources/libs"/>
 
-	<!--
 	<path id="classpath">
         <fileset dir="${lib.dir}" includes="**/*.jar"/>
     </path>
-    -->
 	
 	<target name="clean">
         <delete dir="${build.dir}" failonerror="false"/>
@@ -20,14 +18,18 @@
     
     <target name="build" depends="clean">
         <mkdir dir="${build.dir}/classes"/>
-        <javac source="1.5" target="1.5" srcdir="${src.dir}" destdir="${build.dir}/classes"/> <!-- classpathref="classpath"/> -->
-    	<zipfileset src="~/workspace/libs/external.jar" />
-        <jar destfile="${ant.project.name}.jar">
+        <javac source="1.8" target="1.8" srcdir="${src.dir}" destdir="${build.dir}/classes" classpathref="classpath" includeantruntime="false"/>
+        <!-- Copiar recursos para o diretório de classes -->
+        <copy todir="${build.dir}/classes">
+            <fileset dir="${src.dir}/main/resources" />
+        </copy>
+        <jar destfile="jinvaders-java.jar">
             <manifest>
-                <attribute name="Main-Class" value="org.opensourcearcade.jinvaders.Game"/>
+                <attribute name="Main-Class" value="org.opensourcearcade.jinvaders.Main"/>
             </manifest>
-         <fileset dir="${basedir}/build/classes/" />
-         <fileset dir="${basedir}" includes="res/" />
+            <fileset dir="${build.dir}/classes" />
+            <!-- Incluir conteúdo do LinuxJoystick.jar -->
+            <zipfileset src="${lib.dir}/LinuxJoystick.jar" />
         </jar>
     </target>
     

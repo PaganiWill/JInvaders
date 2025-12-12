@@ -20,6 +20,8 @@ public class Keyboard {
     }
 
     private boolean helpKey;
+    private boolean upKey;
+    private boolean downKey;
     private int lastKey;
 
     public Keyboard() {
@@ -113,6 +115,12 @@ public class Keyboard {
             case KeyEvent.VK_BACK_SPACE:
                 this.backKey = pressed;
                 break;
+            case KeyEvent.VK_UP:
+                this.upKey = pressed;
+                break;
+            case KeyEvent.VK_DOWN:
+                this.downKey = pressed;
+                break;
         }
     }
 
@@ -122,5 +130,21 @@ public class Keyboard {
 
     public void setSpaceKeyReleased(boolean spaceKeyReleased) {
         this.spaceKeyReleased = spaceKeyReleased;
+    }
+
+    public boolean isUpKey() {
+        return upKey;
+    }
+
+    public void setUpKey(boolean upKey) {
+        this.upKey = upKey;
+    }
+
+    public boolean isDownKey() {
+        return downKey;
+    }
+
+    public void setDownKey(boolean downKey) {
+        this.downKey = downKey;
     }
 }

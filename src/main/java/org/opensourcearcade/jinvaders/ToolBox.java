@@ -15,16 +15,14 @@ public final class ToolBox {
 	public static final ToolBox SELF = new ToolBox();
 
 	public static URL getURL(String path) throws FileNotFoundException {
-		// ClassLoader.getSystemResource() procura caminhos *exatamente*
-		// como eles estão na pasta 'resources'.
-		// Ex: "jinvaders.png" ou "sounds/Walk1.wav"
-		// Este método é o mais fiável para builds Maven.
-		URL url = ClassLoader.getSystemResource(path);
-
+		// Tentar primeiro com getClassLoader().getResource() para recursos na raiz
+		URL url = SELF.getClass().getClassLoader().getResource(path);
+		// Se não encontrar, tentar com getResource()
 		if (url == null) {
-			// Se falhar, o ficheiro não está a ser copiado para o classpath.
-			throw new FileNotFoundException("Recurso não encontrado no Classpath: " + path);
+			url = SELF.getClass().getResource(RES_DIR+path);
 		}
+		if (url==null)
+			throw new FileNotFoundException("Não foi possível encontrar: " + path + " (tentou: " + path + " e " + RES_DIR+path + ")");
 		return url;
 	}
 
@@ -108,9 +106,55 @@ public final class ToolBox {
 	}
 
 	public static BufferedImage loadImage(URL url) throws IOException {
-		BufferedImage img = ImageIO.read(url);
+		if (url == null) {
+			throw new IOException("URL é null");
+		}
+		
+		BufferedImage img = null;
+		try (java.io.InputStream is = url.openStream()) {
+			if (is == null) {
+				throw new IOException("Não foi possível abrir InputStream do URL: " + url);
+			}
+			
+			java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
+			byte[] data = new byte[8192];
+			int nRead;
+			while ((nRead = is.read(data, 0, data.length)) != -1) {
+				buffer.write(data, 0, nRead);
+			}
+			buffer.flush();
+			byte[] imageBytes = buffer.toByteArray();
+			
+			java.io.ByteArrayInputStream bais = new java.io.ByteArrayInputStream(imageBytes);
+			img = ImageIO.read(bais);
+			
+			if (img == null) {
+				String[] formats = {"jpg", "jpeg", "png", "gif", "bmp"};
+				for (String format : formats) {
+					java.util.Iterator<javax.imageio.ImageReader> readers = ImageIO.getImageReadersByFormatName(format);
+					if (readers.hasNext()) {
+						javax.imageio.ImageReader reader = readers.next();
+						try {
+							javax.imageio.stream.ImageInputStream iis = ImageIO.createImageInputStream(new java.io.ByteArrayInputStream(imageBytes));
+							reader.setInput(iis);
+							img = reader.read(0);
+							reader.dispose();
+							break;
+						} catch (Exception e) {
+							continue;
+						}
+					}
+				}
+				
+				if (img == null) {
+					throw new IOException("Não foi possível carregar a imagem de: " + url);
+				}
+			}
+		}
+		
 		return convertToCompatibleImage(img);
 	}
+	
 
 	public static void drawImage(Graphics g, BufferedImage image, int x, int y, int frame) {
 		int iw = image.getWidth()/3;
